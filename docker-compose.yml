@@ -1,0 +1,77 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/src
+
+
+    command: >
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000" 
+
+    depends_on:
+      - database
+    
+  database:
+    container_name: database
+    image: postgres:14.6-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    env_file:
+      - .env
+    
+  redis:
+    image: redis:7.2.3
+    ports:
+      - "6379:6379"
+    
+
+  celery:
+    build: 
+      context: .
+    command: celery -A config.celery_app.app worker --loglevel=info
+    depends_on:
+      - redis
+      - app
+    environment:
+      - REDIS_URL=${REDIS_URL}
+    env_file:
+      - .env
+    volumes:
+      - ./src:/src
+    links:
+      - redis
+
+  celery-beat:
+    build: .
+    command: celery -A config.celery_app.app beat --loglevel=info
+    depends_on:
+      - redis
+      - app
+    links:
+      - redis
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      
+  flower:
+    image: mher/flower
+    command: celery flower -A config --broker=redis://localhost:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - celery
+    environment:
+      - CELERY_BROKER_URL=${REDIS_URL}
+      - CELERY_RESULT_BACKEND=${REDIS_URL}
+    env_file:
+      - .env
+  
