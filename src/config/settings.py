@@ -42,8 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_celery_beat',
     'apps.user.apps.UserConfig',
-    'apps.weather.apps.WeatherConfig',
     'apps.subscription.apps.SubscriptionConfig',
+    'apps.city.apps.CityConfig',
     'rest_framework.authtoken',
     'djoser',
 ]
@@ -157,3 +157,10 @@ DJOSER = {
         'user_create': 'apps.user.serializers.UserCreateSerializer',
     }
 }
+
+EMAIL_HOST_USER = EMAIL_HOST_USERNAME
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'

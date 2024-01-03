@@ -14,11 +14,11 @@ class SubscriptionTest(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token.key}') 
     
     def test_subscribe(self):
-        response = self.client.post('/subscriptions/', data={'send_every_hours': 2, 'city': 'London'})
+        response = self.client.post('/subscriptions/', data={'send_every_hours': 2, 'send_every_minutes': 0, 'city': 'London'})
         self.assertTrue(Subscription.objects.filter(user__username='test', city__name='London', send_every_hours=2).exists())
     
     def test_unsubscribe(self):
-        Subscription.objects.create(user=self.user, city=self.city, send_every_hours=2)
+        Subscription.objects.create(user=self.user, city=self.city, send_every_hours=2, send_every_minutes=0)
         self.client.delete('/subscriptions/', data={'city': 'London'})
         self.assertFalse(Subscription.objects.filter(user__email='2lO9o@example.com', city__name='London').exists())
     

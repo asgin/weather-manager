@@ -12,19 +12,7 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     "update_weather_info_every_hour": {
-        "task": "apps.weather.tasks.update_weather_info",
+        "task": "apps.city.tasks.update_weather_info",
         "schedule": crontab(hour="*/1"),
-    },
-    "send_weather_info_every_two_hours": {
-        "task": "apps.subscription.tasks.send_weather_info_every_2_hours",
-        "schedule": crontab(hour="*/2"),
-    },
-    "send_weather_info_every_six_hours": {
-        "task": "apps.subscription.tasks.send_weather_info_every_6_hours",
-        "schedule": crontab(hour="*/6"),
-    },  
-    "send_weather_info_every_twelve_hours": {
-        "task": "apps.subscription.tasks.send_weather_info_every_12_hours",
-        "schedule": crontab(hour="*/12"),
     }
 }

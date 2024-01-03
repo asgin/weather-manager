@@ -1,3 +1,4 @@
 from django.contrib import admin
+from apps.user.models import WeatherManagerUser
 
-# Register your models here.
+admin.site.register(WeatherManagerUser)

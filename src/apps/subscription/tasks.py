@@ -1,65 +1,21 @@
+from apps.city.models import City
 from apps.subscription.models import Subscription
+from apps.user.models import WeatherManagerUser
 from config.celery_app import app
 from django.core.mail import get_connection, EmailMessage
-from apps.weather.models import Weather
 
 @app.task()
-def send_weather_info_every_2_hours():
-    subscriptions =[
-        {
-            'user': elem[0],
-            'city': elem[1].name,
-        }
-        for elem in Subscription.objects.filter(send_every_hours=2).values_list('user', 'city')
-    ]
-    send_mail_to_subscribers.delay(subscriptions)
-    return "Success"
-
-@app.task()
-def send_weather_info_every_6_hours():
-    subscriptions =[
-        {
-            'user': elem[0],
-            'city': elem[1].name,
-        }
-        for elem in Subscription.objects.filter(send_every_hours=6).values_list('user', 'city')
-    ]
-    send_mail_to_subscribers.delay(subscriptions)
-    return "Success"
-
-@app.task()
-def send_weather_info_every_12_hours():
-    subscriptions =[
-        {
-            'user': elem[0],
-            'city': elem[1].name,
-        }
-        for elem in Subscription.objects.filter(send_every_hours=12).values_list('user', 'city')
-    ]
-    send_mail_to_subscribers.delay(subscriptions)
-    return "Success"
-
-@app.task()
-def send_mail_to_subscribers(subscriptions: list):
+def send_mail_to_user(user_id):
     try:
         connection = get_connection()
         connection.open()
-        email_messages = []
-
-        for elem in subscriptions:
-            try:
-                weather = Weather.objects.get(city=elem['city'])
-            except Weather.DoesNotExist:
-                return "This city does not exist"
-
-            subject = f"Hello {elem['user'].first_name}!\nWeather information for {elem['city']}"
-            body = f"Main weather: {weather.main_weather}\nTemperature: {weather.temp}\nFeels like: {weather.feels_like}\nWind speed: {weather.speed_wind}"
-            message = EmailMessage(subject=subject, body=body, to=[elem['user'].email], from_email="weather_manager@mail.com", connection=connection)
-            email_messages.append(message)
-
-        connection.send_messages(email_messages)
+        user = WeatherManagerUser.objects.get(id=user_id)
+        city = Subscription.objects.get(user=user).city
+        subject = f"Hello {user.first_name}!\nWeather information for {city.name}"
+        body = f"Main weather: {city.weather_info['weather'][0]['main']}\nTemperature: {city.weather_info['main']['temp']}\nFeels like: {city.weather_info['main']['feels_like']}\nWind speed: {city.weather_info['wind']['speed']}\nHumidity: {city.weather_info['main']['humidity']}" 
+        email_message = EmailMessage(subject=subject, body=body, to=[user.email], from_email="weather_manager@mail.com", connection=connection)
+        connection.send_messages([email_message])
     except Exception as e:
-        # Обработка ошибок, например, логирование
         print(f"An error occurred: {e}")
     finally:
         connection.close()
