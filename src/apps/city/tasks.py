@@ -1,7 +1,7 @@
 from config.celery_app import app
 import requests
 from apps.city.models import City
-from environ import WEATHER_LINK
+from config.environ import WEATHER_LINK
 
 @app.task()
 def update_weather_info():
